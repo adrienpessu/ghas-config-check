@@ -19,9 +19,9 @@ func main() {
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	url := os.Getenv("GITHUB_API_URL")
 
-	//codeScanningAlerts, codeScanningEnabled := getCodeScanningAlerts(token, url, repository)
-	secretScanningAlerts, secretScanningEnabled := getCodeScanningAlerts(token, url, repository)
-	//dependabotScanningAlerts, dependabotScanningEnabled := getCodeScanningAlerts(token, url, repository)
+	//codeScanningAlerts, codeScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
+	secretScanningAlerts, secretScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
+	//dependabotScanningAlerts, dependabotScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
 
 	//if codeScanningEnabled {
 	//	fmt.Println("Code Scanning Alerts: ", codeScanningAlerts)
