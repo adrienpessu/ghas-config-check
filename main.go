@@ -155,6 +155,9 @@ func getCodeScanningAlerts(token string, instance string, repo string) (int, boo
 
 	res, err := client.Do(req)
 
+	fmt.Println("status:")
+	fmt.Println(res.StatusCode)
+
 	if res.StatusCode == 404 {
 		return 0, false
 	}
