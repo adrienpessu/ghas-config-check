@@ -33,6 +33,7 @@ func main() {
 		fmt.Println("Secret Scanning Alerts: ", secretScanningAlerts)
 	} else {
 		fmt.Println("Secret Scanning is not enabled")
+		os.Exit(1)
 	}
 
 	//if dependabotScanningEnabled {
