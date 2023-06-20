@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	json "encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	log "log"
@@ -13,14 +12,13 @@ import (
 )
 
 func main() {
-	githubToken := flag.String("token", "", "GitHub Token to use for authentication")
-	flag.Parse()
 
+	token := os.Getenv("GITHUB_TOKEN")
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	url := os.Getenv("GITHUB_API_URL")
 
 	//codeScanningAlerts, codeScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
-	secretScanningAlerts, secretScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
+	secretScanningAlerts, secretScanningEnabled := getCodeScanningAlerts(token, url, repository)
 	//dependabotScanningAlerts, dependabotScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
 
 	//if codeScanningEnabled {
