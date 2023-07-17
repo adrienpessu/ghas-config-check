@@ -9,6 +9,7 @@ import (
 	log "log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,9 +19,23 @@ func main() {
 	token := os.Getenv("GITHUB_TOKEN")
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	workspace := os.Getenv("GITHUB_WORKSPACE")
+
 	url := "https://api.github.com"
 	if os.Getenv("GITHUB_API_URL") != "" {
 		url = os.Getenv("GITHUB_API_URL")
+	}
+
+	codeScanningAlertsGate := 30
+	if os.Getenv("CODE_SCANNING_ALERTS_GATE") != "" {
+		codeScanningAlertsGate, _ = strconv.Atoi(os.Getenv("CODE_SCANNING_ALERTS_GATE"))
+	}
+	secretScanningAlertsGate := 30
+	if os.Getenv("SECRET_SCANNING_ALERTS_GATE") != "" {
+		secretScanningAlertsGate, _ = strconv.Atoi(os.Getenv("SECRET_SCANNING_ALERTS_GATE"))
+	}
+	dependabotScanningAlertsGate := 30
+	if os.Getenv("DEPENDABOT_SCANNING_ALERTS_GATE") != "" {
+		dependabotScanningAlertsGate, _ = strconv.Atoi(os.Getenv("DEPENDABOT_SCANNING_ALERTS_GATE"))
 	}
 
 	codeScanningEnabled := readWorkflowFiles(workspace + "/.github/workflows")
@@ -31,9 +46,12 @@ func main() {
 	dependabotScanningAlerts, dependabotScanningEnabled := getDependabotAlerts(token, url, repository, 1, 0)
 
 	issueContent := ""
+	codeScanningAlerts := 0
 	if codeScanningEnabled {
 		codeScanningAlerts, _ := getCodeScanningAlerts(token, url, repository, 1, 0)
-		issueContent += fmt.Sprintln("Code Scanning Alerts: ", codeScanningAlerts)
+		if codeScanningAlerts > codeScanningAlertsGate {
+			issueContent += fmt.Sprintln("Code Scanning Alerts: ", codeScanningAlerts)
+		}
 	} else {
 		issueContent += fmt.Sprintln("Code Scanning is not enabled")
 	}
@@ -50,7 +68,7 @@ func main() {
 		issueContent += fmt.Sprintln("Dependabot is not enabled")
 	}
 
-	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled {
+	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled || codeScanningAlerts > codeScanningAlertsGate || secretScanningAlerts > secretScanningAlertsGate || dependabotScanningAlerts > dependabotScanningAlertsGate {
 		createIssue(token, url, repository, "Security Scan Results", issueContent)
 		os.Exit(1)
 	}
