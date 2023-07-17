@@ -24,15 +24,15 @@ func main() {
 	}
 
 	codeScanningEnabled := readWorkflowFiles(workspace + "/.github/workflows")
-	codeScanningAlerts := 0
 	if codeScanningEnabled {
-		codeScanningAlerts, _ = getCodeScanningAlerts(token, url, repository, 1, 0)
+
 	}
 	secretScanningAlerts, secretScanningEnabled := getSecretScanningAlerts(token, url, repository, 1, 0)
 	dependabotScanningAlerts, dependabotScanningEnabled := getDependabotAlerts(token, url, repository, 1, 0)
 
 	issueContent := ""
 	if codeScanningEnabled {
+		codeScanningAlerts, _ := getCodeScanningAlerts(token, url, repository, 1, 0)
 		issueContent += fmt.Sprintln("Code Scanning Alerts: ", codeScanningAlerts)
 	} else {
 		issueContent += fmt.Sprintln("Code Scanning is not enabled")
@@ -50,7 +50,7 @@ func main() {
 		issueContent += fmt.Sprintln("Dependabot is not enabled")
 	}
 
-	if codeScanningEnabled || secretScanningEnabled || dependabotScanningEnabled {
+	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled {
 		createIssue(token, url, repository, "Security Scan Results", issueContent)
 		os.Exit(1)
 	}
