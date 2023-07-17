@@ -69,8 +69,12 @@ func main() {
 	}
 
 	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled || codeScanningAlerts > codeScanningAlertsGate || secretScanningAlerts > secretScanningAlertsGate || dependabotScanningAlerts > dependabotScanningAlertsGate {
+		fmt.Println("Security issues found", issueContent)
 		createIssue(token, url, repository, "Security Scan Results", issueContent)
 		os.Exit(1)
+	} else {
+		fmt.Println("No security issues found : %s", issueContent)
+		os.Exit(0)
 	}
 
 }
