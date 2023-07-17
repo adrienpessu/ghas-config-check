@@ -31,27 +31,28 @@ func main() {
 	secretScanningAlerts, secretScanningEnabled := getSecretScanningAlerts(token, url, repository, 1, 0)
 	dependabotScanningAlerts, dependabotScanningEnabled := getDependabotAlerts(token, url, repository, 1, 0)
 
+	issueContent := ""
 	if codeScanningEnabled {
-		fmt.Println("Code Scanning Alerts: ", codeScanningAlerts)
+		issueContent += fmt.Sprintln("Code Scanning Alerts: ", codeScanningAlerts)
 	} else {
-		fmt.Println("Code Scanning is not enabled")
+		issueContent += fmt.Sprintln("Code Scanning is not enabled")
 	}
 
 	if secretScanningEnabled {
-		fmt.Println("Secret Scanning Alerts: ", secretScanningAlerts)
+		issueContent += fmt.Sprintln("Secret Scanning Alerts: ", secretScanningAlerts)
 	} else {
-		fmt.Println("Secret Scanning is not enabled")
+		issueContent += fmt.Sprintln("Secret Scanning is not enabled")
 	}
 
 	if dependabotScanningEnabled {
-		fmt.Println("Dependabot Alerts: ", dependabotScanningAlerts)
+		issueContent += fmt.Sprintln("Dependabot Alerts: ", dependabotScanningAlerts)
 	} else {
-		fmt.Println("Dependabot is not enabled")
+		issueContent += fmt.Sprintln("Dependabot is not enabled")
 	}
 
 	if codeScanningEnabled || secretScanningEnabled || dependabotScanningEnabled {
-		issueContent := fmt.Sprintf("Code Scanning Alerts: %v\nSecret Scanning Alerts: %v\nDependabot Alerts: %v", codeScanningAlerts, secretScanningAlerts, dependabotScanningAlerts)
 		createIssue(token, url, repository, "Security Scan Results", issueContent)
+		os.Exit(1)
 	}
 
 }
