@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	json "encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	log "log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -15,30 +17,43 @@ func main() {
 
 	token := os.Getenv("GITHUB_TOKEN")
 	repository := os.Getenv("GITHUB_REPOSITORY")
-	url := os.Getenv("GITHUB_API_URL")
+	workspace := os.Getenv("GITHUB_WORKSPACE")
+	url := "https://api.github.com"
+	if os.Getenv("GITHUB_API_URL") != "" {
+		url = os.Getenv("GITHUB_API_URL")
+	}
 
-	//codeScanningAlerts, codeScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
-	secretScanningAlerts, secretScanningEnabled := getCodeScanningAlerts(token, url, repository)
-	//dependabotScanningAlerts, dependabotScanningEnabled := getCodeScanningAlerts(*githubToken, url, repository)
+	codeScanningEnabled := readWorkflowFiles(workspace + "/.github/workflows")
+	codeScanningAlerts := 0
+	if codeScanningEnabled {
+		codeScanningAlerts, _ = getCodeScanningAlerts(token, url, repository, 1, 0)
+	}
+	secretScanningAlerts, secretScanningEnabled := getSecretScanningAlerts(token, url, repository, 1, 0)
+	dependabotScanningAlerts, dependabotScanningEnabled := getDependabotAlerts(token, url, repository, 1, 0)
 
-	//if codeScanningEnabled {
-	//	fmt.Println("Code Scanning Alerts: ", codeScanningAlerts)
-	//} else {
-	//	fmt.Println("Code Scanning is not enabled")
-	//}
+	if codeScanningEnabled {
+		fmt.Println("Code Scanning Alerts: ", codeScanningAlerts)
+	} else {
+		fmt.Println("Code Scanning is not enabled")
+	}
 
 	if secretScanningEnabled {
 		fmt.Println("Secret Scanning Alerts: ", secretScanningAlerts)
 	} else {
 		fmt.Println("Secret Scanning is not enabled")
-		os.Exit(1)
 	}
 
-	//if dependabotScanningEnabled {
-	//	fmt.Println("Dependabot Alerts: ", dependabotScanningAlerts)
-	//} else {
-	//	fmt.Println("Dependabot is not enabled")
-	//}
+	if dependabotScanningEnabled {
+		fmt.Println("Dependabot Alerts: ", dependabotScanningAlerts)
+	} else {
+		fmt.Println("Dependabot is not enabled")
+	}
+
+	if codeScanningEnabled || secretScanningEnabled || dependabotScanningEnabled {
+		issueContent := fmt.Sprintf("Code Scanning Alerts: %v\nSecret Scanning Alerts: %v\nDependabot Alerts: %v", codeScanningAlerts, secretScanningAlerts, dependabotScanningAlerts)
+		createIssue(token, url, repository, "Security Scan Results", issueContent)
+	}
+
 }
 
 func createIssue(token string, instance string, repo string, title string, content string) Issue {
@@ -93,9 +108,11 @@ func createIssue(token string, instance string, repo string, title string, conte
 
 }
 
-func getSecretScanningAlerts(token string, instance string, repo string) (int, bool) {
+func getSecretScanningAlerts(token string, instance string, repo string, page int, counter int) (int, bool) {
 
-	url := fmt.Sprintf("%v/repos/%v/secret-scanning/alerts", instance, repo)
+	perPage := 100
+
+	url := fmt.Sprintf("%v/repos/%v/secret-scanning/alerts?per_page=%d&state=open&page=%d", instance, repo, perPage, page)
 	method := "GET"
 
 	client := &http.Client{}
@@ -130,13 +147,44 @@ func getSecretScanningAlerts(token string, instance string, repo string) (int, b
 
 	var response Alert
 	json.Unmarshal([]byte(string(body)), &response)
+
+	if len(response) > 0 && len(response) == perPage {
+		nextPage := page + 1
+		counter += len(response)
+		nextPageCount, _ := getSecretScanningAlerts(token, instance, repo, nextPage, counter)
+		return len(response) + nextPageCount, true
+	} else if len(response) == 0 {
+		return 0, true
+	}
 
 	return len(response), true
 }
 
-func getCodeScanningAlerts(token string, instance string, repo string) (int, bool) {
+func readWorkflowFiles(workflowDirectory string) bool {
+	codeScanningActionExists := false
+	files, _ := os.ReadDir(workflowDirectory)
 
-	url := fmt.Sprintf("%v/repos/%v/code-scanning/alerts", instance, repo)
+	for _, f := range files {
+		if !f.IsDir() {
+			file, _ := os.Open(fmt.Sprintf("%v/%v", workflowDirectory, f.Name()))
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				if strings.Contains(scanner.Text(), "codeql-action") {
+					codeScanningActionExists = true
+				}
+			}
+		}
+	}
+
+	return codeScanningActionExists
+}
+
+func getCodeScanningAlerts(token string, instance string, repo string, page int, counter int) (int, bool) {
+
+	perPage := 100
+
+	url := fmt.Sprintf("%v/repos/%v/code-scanning/alerts?per_page=%d&state=open&page=%d", instance, repo, perPage, page)
 	method := "GET"
 
 	client := &http.Client{}
@@ -152,9 +200,6 @@ func getCodeScanningAlerts(token string, instance string, repo string) (int, boo
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-
-	fmt.Println("status:")
-	fmt.Println(res.StatusCode)
 
 	if res.StatusCode == 404 {
 		return 0, false
@@ -174,13 +219,24 @@ func getCodeScanningAlerts(token string, instance string, repo string) (int, boo
 
 	var response Alert
 	json.Unmarshal([]byte(string(body)), &response)
+
+	if len(response) > 0 && len(response) == perPage {
+		nextPage := page + 1
+		counter += len(response)
+		nextPageCount, _ := getCodeScanningAlerts(token, instance, repo, nextPage, counter)
+		return len(response) + nextPageCount, true
+	} else if len(response) == 0 {
+		return 0, true
+	}
 
 	return len(response), true
 }
 
-func getDependabotAlerts(token string, instance string, repo string) (int, bool) {
+func getDependabotAlerts(token string, instance string, repo string, page int, counter int) (int, bool) {
 
-	url := fmt.Sprintf("%v/repos/%v/dependabot/alerts", instance, repo)
+	perPage := 100
+
+	url := fmt.Sprintf("%v/repos/%v/dependabot/alerts?per_page=%d&state=open&page=%d", instance, repo, perPage, page)
 	method := "GET"
 
 	client := &http.Client{}
@@ -197,7 +253,7 @@ func getDependabotAlerts(token string, instance string, repo string) (int, bool)
 
 	res, err := client.Do(req)
 
-	if res.StatusCode == 404 {
+	if res.StatusCode == 404 || res.StatusCode == 403 {
 		return 0, false
 	}
 
@@ -215,6 +271,15 @@ func getDependabotAlerts(token string, instance string, repo string) (int, bool)
 
 	var response Alert
 	json.Unmarshal([]byte(string(body)), &response)
+
+	if len(response) > 0 && len(response) == perPage {
+		nextPage := page + 1
+		counter += len(response)
+		nextPageCount, _ := getDependabotAlerts(token, instance, repo, nextPage, counter)
+		return len(response) + nextPageCount, true
+	} else if len(response) == 0 {
+		return 0, true
+	}
 
 	return len(response), true
 }
