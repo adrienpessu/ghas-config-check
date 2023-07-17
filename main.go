@@ -86,10 +86,6 @@ func createIssue(token string, instance string, repo string, title string, conte
 	req.Header.Add("X-GitHub-Api-Version", "2022-11-28")
 	req.Header.Add("Content-Type", "application/json")
 
-	fmt.Println("-------")
-	fmt.Println(req)
-	fmt.Println("-------")
-
 	res, err := client.Do(req)
 	fmt.Println(res.StatusCode)
 	if err != nil {
