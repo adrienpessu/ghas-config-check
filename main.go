@@ -109,7 +109,7 @@ func createIssue(token string, instance string, repo string, title string, conte
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-	fmt.Println(res.StatusCode)
+	fmt.Println("Issue: ", res.StatusCode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,6 +147,8 @@ func getSecretScanningAlerts(token string, instance string, repo string, page in
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
+
+	fmt.Println("Secrets scanning alerts: ", res.StatusCode)
 
 	if res.StatusCode == 404 {
 		return 0, false
@@ -219,7 +221,7 @@ func getCodeScanningAlerts(token string, instance string, repo string, page int,
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-
+	fmt.Println("Code scanning alerts: ", res.StatusCode)
 	if res.StatusCode == 404 {
 		return 0, false
 	}
@@ -271,7 +273,7 @@ func getDependabotAlerts(token string, instance string, repo string, page int, c
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-
+	fmt.Println("Dependabot scanning alerts: ", res.StatusCode)
 	if res.StatusCode == 404 || res.StatusCode == 403 {
 		return 0, false
 	}
