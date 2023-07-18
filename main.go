@@ -20,7 +20,10 @@ func main() {
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	workspace := os.Getenv("GITHUB_WORKSPACE")
 
-	fmt.Println("Token: ", token)
+	if len(token) == 0 {
+		fmt.Println("GITHUB_TOKEN is not set")
+		os.Exit(1)
+	}
 	fmt.Println("Repository: ", repository)
 	fmt.Println("Workspace: ", workspace)
 
