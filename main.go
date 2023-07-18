@@ -20,6 +20,10 @@ func main() {
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	workspace := os.Getenv("GITHUB_WORKSPACE")
 
+	fmt.Println("Token: ", token)
+	fmt.Println("Repository: ", repository)
+	fmt.Println("Workspace: ", workspace)
+
 	url := "https://api.github.com"
 	if os.Getenv("GITHUB_API_URL") != "" {
 		url = os.Getenv("GITHUB_API_URL")
