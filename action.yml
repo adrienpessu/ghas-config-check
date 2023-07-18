@@ -5,6 +5,14 @@ inputs:
     description: 'Token to use for authentication'
     required: true
     default: ''
+  issue:
+    description: 'Create an issue when a new alert is created'
+    required: false
+    default: 'false'
+  debug:
+    description: 'Debug mode'
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -12,7 +20,7 @@ runs:
       with:
         go-version: '1.20.4'
 
-    - run: GITHUB_TOKEN=${{ inputs.token }} go run ${{ github.action_path }}/main.go
+    - run: DEBUG=${{ inputs.debug }} CREATE_ISSUE=${{ inputs.issue }} GITHUB_TOKEN=${{ inputs.token }} go run ${{ github.action_path }}/main.go
       shell: bash
 branding:
   icon: 'lock'

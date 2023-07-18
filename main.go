@@ -19,13 +19,12 @@ func main() {
 	token := os.Getenv("GITHUB_TOKEN")
 	repository := os.Getenv("GITHUB_REPOSITORY")
 	workspace := os.Getenv("GITHUB_WORKSPACE")
+	shouldCreateIssue := os.Getenv("CREATE_ISSUE")
 
 	if len(token) == 0 {
 		fmt.Println("GITHUB_TOKEN is not set")
 		os.Exit(1)
 	}
-	fmt.Println("Repository: ", repository)
-	fmt.Println("Workspace: ", workspace)
 
 	url := "https://api.github.com"
 	if os.Getenv("GITHUB_API_URL") != "" {
@@ -77,13 +76,13 @@ func main() {
 
 	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled || codeScanningAlerts > codeScanningAlertsGate || secretScanningAlerts > secretScanningAlertsGate || dependabotScanningAlerts > dependabotScanningAlertsGate {
 		fmt.Println("Security issues found", issueContent)
-		createIssue(token, url, repository, "Security Scan Results", issueContent)
+		if shouldCreateIssue == "true" {
+			createIssue(token, url, repository, "Security Scan Results", issueContent)
+		}
 		os.Exit(1)
 	} else {
-		fmt.Println("No security issues found : %s", issueContent)
 		os.Exit(0)
 	}
-
 }
 
 func createIssue(token string, instance string, repo string, title string, content string) Issue {
@@ -116,7 +115,7 @@ func createIssue(token string, instance string, repo string, title string, conte
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-	fmt.Println("Issue: ", res.StatusCode)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -155,9 +154,11 @@ func getSecretScanningAlerts(token string, instance string, repo string, page in
 
 	res, err := client.Do(req)
 
-	fmt.Println("Secrets scanning alerts: ", res.StatusCode)
+	if os.Getenv("DEBUG") == "true" {
+		fmt.Println("Secrets scanning alerts: ", res.StatusCode)
+	}
 
-	if res.StatusCode == 404 {
+	if res.StatusCode == 404 || res.StatusCode == 403 {
 		return 0, false
 	}
 
@@ -228,7 +229,9 @@ func getCodeScanningAlerts(token string, instance string, repo string, page int,
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-	fmt.Println("Code scanning alerts: ", res.StatusCode)
+	if os.Getenv("DEBUG") == "true" {
+		fmt.Println("Code scanning alerts: ", res.StatusCode)
+	}
 	if res.StatusCode == 404 {
 		return 0, false
 	}
@@ -280,7 +283,9 @@ func getDependabotAlerts(token string, instance string, repo string, page int, c
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
-	fmt.Println("Dependabot scanning alerts: ", res.StatusCode)
+	if os.Getenv("DEBUG") == "true" {
+		fmt.Println("Dependabot scanning alerts: ", res.StatusCode)
+	}
 	if res.StatusCode == 404 || res.StatusCode == 403 {
 		return 0, false
 	}
