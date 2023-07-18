@@ -33,17 +33,17 @@ jobs:
         with:
           fetch-depth: 0
       - uses: github/codeql-action/config-check@v1
-      with:
-        # The number of Code Scanning alerts where the action should fail. Defaults to 30.
-        code_scanning_alerts_gate: '30'
-        # The number of Dependabot Scanning alerts where the action should fail. Defaults to 30.
-        dependabot_scanning_alerts_gate: '30'
-        # The number of Secret Scanning alerts where the action should fail. Defaults to 30.
-        secret_scanning_alerts_gate: '30'
-        # If true, the action will create an issue in this repository with the results of the check. Defaults to false.
-        issue: 'false'
-        # Debug mode. Defaults to false.
-        debug: 'false'
-        # The GitHub token to use for authentication. Defaults to the current token.
-        token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # The number of Code Scanning alerts where the action should fail. Defaults to 30.
+          code_scanning_alerts_gate: '30'
+          # The number of Dependabot Scanning alerts where the action should fail. Defaults to 30.
+          dependabot_scanning_alerts_gate: '30'
+          # The number of Secret Scanning alerts where the action should fail. Defaults to 30.
+          secret_scanning_alerts_gate: '30'
+          # If true, the action will create an issue in this repository with the results of the check. Defaults to false.
+          issue: 'false'
+          # Debug mode. Defaults to false.
+          debug: 'false'
+          # The GitHub token to use for authentication. Defaults to the current token.
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
