@@ -13,7 +13,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-   schedule:
+  schedule:
      - cron: '*/5 * * * *'
 permissions:
   actions: read
