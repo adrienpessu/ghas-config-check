@@ -5,6 +5,18 @@ inputs:
     description: 'Token to use for authentication'
     required: true
     default: ''
+  code_scanning_alerts_gate:
+    description: 'Code Scanning Alerts Gate'
+    required: false
+    default: '30'
+  dependabot_scanning_alerts_gate:
+    description: 'Code Scanning Alerts Gate'
+    required: false
+    default: '30'
+  secret_scanning_alerts_gate:
+    description: 'Code Scanning Alerts Gate'
+    required: false
+    default: '30'
   issue:
     description: 'Create an issue when a new alert is created'
     required: false
@@ -20,7 +32,7 @@ runs:
       with:
         go-version: '1.20.4'
 
-    - run: DEBUG=${{ inputs.debug }} CREATE_ISSUE=${{ inputs.issue }} GITHUB_TOKEN=${{ inputs.token }} go run ${{ github.action_path }}/main.go
+    - run: DEPENDABOT_SCANNING_ALERTS_GATE=${{ inputs.dependabot_scanning_alerts_gate }} SECRET_SCANNING_ALERTS_GATE=${{ inputs.secret_scanning_alerts_gate }} CODE_SCANNING_ALERTS_GATE=${{ inputs.code_scanning_alerts_gate }} DEBUG=${{ inputs.debug }} CREATE_ISSUE=${{ inputs.issue }} GITHUB_TOKEN=${{ inputs.token }} go run ${{ github.action_path }}/main.go
       shell: bash
 branding:
   icon: 'lock'
