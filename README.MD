@@ -32,7 +32,7 @@ jobs:
         # Get full history for spotless ratchetFrom
         with:
           fetch-depth: 0
-      - uses: github/codeql-action/config-check@v1
+      - uses: adrienpessu/config-check@1.0.0
         with:
           # The number of Code Scanning alerts where the action should fail. Defaults to 30.
           code_scanning_alerts_gate: '30'
