@@ -73,7 +73,7 @@ func main() {
 	} else {
 		issueContent += fmt.Sprintln("Dependabot is not enabled")
 	}
-
+	os.Setenv("GITHUB_STEP_SUMMARY", issueContent)
 	if !codeScanningEnabled || !secretScanningEnabled || !dependabotScanningEnabled || codeScanningAlerts > codeScanningAlertsGate || secretScanningAlerts > secretScanningAlertsGate || dependabotScanningAlerts > dependabotScanningAlertsGate {
 		fmt.Println("Security issues found", issueContent)
 		if shouldCreateIssue == "true" {
